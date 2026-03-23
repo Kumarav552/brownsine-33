@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --card: #fffaf2;
+      --ink: #13293d;
+      --accent: #f15a29;
+      --accent-2: #00a6a6;
+      --shadow: 0 18px 45px rgba(19, 41, 61, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(241, 90, 41, 0.18), transparent 30%),
+        radial-gradient(circle at 100% 10%, rgba(0, 166, 166, 0.2), transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1080px, 92%);
+      margin: 0 auto;
+    }
+
+    nav {
+      padding: 22px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: 0.04em;
+    }
+
+    .btn {
+      border: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+      align-items: center;
+      padding: 40px 0 34px;
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 1.02;
+      margin-bottom: 14px;
+    }
+
+    .hero p {
+      max-width: 58ch;
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+
+    .hero-card {
+      background: linear-gradient(160deg, #fff7eb, #fdfdfd);
+      border: 2px solid rgba(19, 41, 61, 0.08);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      animation: floatIn .8s ease both;
+    }
+
+    .pill {
+      display: inline-block;
+      background: rgba(241, 90, 41, 0.14);
+      color: #b63f1a;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 26px 0 42px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      transform: translateY(20px);
+      opacity: 0;
+      animation: rise .7s ease forwards;
+    }
+
+    .card:nth-child(2) {
+      animation-delay: 0.12s;
+    }
+
+    .card:nth-child(3) {
+      animation-delay: 0.24s;
+    }
+
+    h3 {
+      font-family: "Syne", sans-serif;
+      margin-bottom: 8px;
+    }
+
+    footer {
+      padding: 20px 0 36px;
+      font-size: 0.92rem;
+      color: rgba(19, 41, 61, 0.72);
+    }
+
+    @keyframes rise {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes floatIn {
+      from {
+        transform: translateY(24px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="logo">NOVA</div>
+      <button class="btn">Contact</button>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <h1>Build A Website That Feels Alive</h1>
+        <p>
+          This is a ready one-page website you can edit for your brand, portfolio, or startup.
+          Replace text, colors, and sections to match your project.
+        </p>
+        <button class="btn">Start Project</button>
+      </div>
+      <div class="hero-card">
+        <span class="pill">New Launch</span>
+        <h3>Creative + Fast + Mobile Friendly</h3>
+        <p>Designed with responsive layout, smooth animations, and modern typography.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h3>Branding</h3>
+        <p>Clear voice, visual direction, and memorable first impression.</p>
+      </article>
+      <article class="card">
+        <h3>Design</h3>
+        <p>Bold sections, soft depth, and polished interactions that feel intentional.</p>
+      </article>
+      <article class="card">
+        <h3>Launch</h3>
+        <p>Clean code structure ready for your next updates and deployment.</p>
+      </article>
+    </section>
+
+    <footer>
+      <p>2026 Nova Studio. All rights reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>

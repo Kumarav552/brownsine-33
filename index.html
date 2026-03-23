@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RK Cash Finance Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-glow glow-left"></div>
+  <div class="page-glow glow-right"></div>
+
+  <div id="loginPage" class="auth-screen">
+    <div class="auth-card">
+      <p class="auth-eyebrow">Secure Access</p>
+      <h2>Login to RK Finance Tracker</h2>
+      <form id="loginForm">
+        <label for="savedAccounts">Choose Account</label>
+        <select id="savedAccounts">
+          <option value="">Use default account or type manually</option>
+        </select>
+
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter your username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required>
+
+        <label class="remember-row">
+          <input type="checkbox" id="remember">
+          <span>Remember Me</span>
+        </label>
+
+        <button type="submit">Login</button>
+
+        <div class="auth-links">
+          <a href="#">Forgot Password?</a>
+        </div>
+
+        <p class="auth-switch">Don't have an account? <a id="signUpLink" href="#">Sign up</a></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="signUpPage" class="auth-screen" style="display: none;">
+    <div class="auth-card">
+      <p class="auth-eyebrow">Create Account</p>
+      <h2>Join RK Finance Tracker</h2>
+      <form id="signUpForm">
+        <label for="signUpUsername">Username</label>
+        <input type="text" id="signUpUsername" placeholder="Choose a username" required>
+
+        <label for="signUpEmail">Email</label>
+        <input type="email" id="signUpEmail" placeholder="Enter your email" required>
+
+        <label for="signUpPassword">Password</label>
+        <input type="password" id="signUpPassword" placeholder="Create a password" required>
+
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+
+        <button type="submit">Sign Up</button>
+        <p class="auth-note">Each signup is saved as another account option on the login screen.</p>
+        <p class="auth-switch">Already have an account? <a id="loginLink" href="#">Login</a></p>
+      </form>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <header>
+      <div class="header-icon-wrap">
+        <button id="homeBtn" class="icon-button" aria-label="Home">&#8249;</button>
+      </div>
+      <div class="header-center">
+        <p class="header-label">RK Finance Tracker</p>
+        <h1>Calendar</h1>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="icon-button" aria-label="Toggle theme">T</button>
+        <button id="profileBtn" class="avatar-button" aria-label="Open profile">
+          <img id="headerProfilePhoto" class="avatar-image" alt="Profile photo">
+          <span id="headerAvatarFallback" class="avatar-fallback">RK</span>
+        </button>
+      </div>
+    </header>
+
+    <section id="homePage" class="container">
+      <div class="hero-panel">
+        <div class="top-controls">
+          <button id="prevMonth" class="icon-button" aria-label="Previous month">&#8249;</button>
+          <h3 id="monthYear"></h3>
+          <button id="nextMonth" class="icon-button" aria-label="Next month">&#8250;</button>
+        </div>
+
+        <div class="summary">
+          <div class="card income">
+            <span class="mini-label">Income</span>
+            <p id="monthIncome">0</p>
+          </div>
+          <div class="card expense">
+            <span class="mini-label">Expense</span>
+            <p id="monthExpense">0</p>
+          </div>
+          <div class="card savings">
+            <span class="mini-label">Savings</span>
+            <p id="monthSavings">0</p>
+          </div>
+        </div>
+      </div>
+
+      <section class="calendar-panel">
+        <div class="weekday-row">
+          <span>Sun</span>
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+        </div>
+        <div class="calendar" id="calendar"></div>
+      </section>
+
+      <section class="transactions-panel">
+        <div class="panel-heading">
+          <h4 id="transactionsTitle">Transactions</h4>
+          <button id="logout" class="pill-button">Logout</button>
+        </div>
+        <div class="totals-row">
+          <span>Income: <strong id="selectedIncome">&#8377;0</strong></span>
+          <span>Expense: <strong id="selectedExpense">&#8377;0</strong></span>
+          <span>Balance: <strong id="selectedBalance">&#8377;0</strong></span>
+        </div>
+        <div id="dailyTransactions" class="daily-transactions"></div>
+      </section>
+    </section>
+
+    <section id="profilePage" class="container" style="display: none;">
+      <div class="profile-card">
+        <p class="auth-eyebrow">Account</p>
+        <h3>Profile</h3>
+        <div class="profile-grid">
+          <div class="card profile-photo-card">
+            <h4>Profile Photo</h4>
+            <div class="profile-photo-wrap">
+              <img id="profilePhotoPreview" class="profile-photo" alt="Profile photo preview">
+              <div id="profilePhotoFallback" class="profile-photo-fallback">RK</div>
+            </div>
+            <label for="profilePhotoInput" class="pill-button upload-button">Upload Photo</label>
+            <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+          </div>
+          <div class="card">
+            <h4>User Information</h4>
+            <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+            <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+            <p><strong>Member Since:</strong> <span id="profileSince"></span></p>
+          </div>
+          <div class="card">
+            <h4>Settings</h4>
+            <button id="changePasswordBtn" class="pill-button">Change Password</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav">
+      <button id="bottomHome" class="nav-item active">
+        <span>HM</span>
+        <small>Home</small>
+      </button>
+      <button id="bottomCalendar" class="nav-item">
+        <span>CL</span>
+        <small>Calendar</small>
+      </button>
+      <button id="bottomReports" class="nav-item">
+        <span>RP</span>
+        <small>Reports</small>
+      </button>
+    </nav>
+  </main>
+
+  <div class="modal" id="entryModal" style="display: none;">
+    <div class="modal-content">
+      <span id="closeModal">&#10005;</span>
+      <h3 id="selectedDate"></h3>
+
+      <input type="number" id="incomeInput" placeholder="Enter income">
+      <input type="number" id="expenseInput" placeholder="Enter expense">
+
+      <select id="categoryInput">
+        <option>Food</option>
+        <option>Travel</option>
+        <option>Bills</option>
+        <option>Shopping</option>
+        <option>Entertainment</option>
+        <option>Other</option>
+      </select>
+
+      <input type="text" id="noteInput" placeholder="Notes">
+      <button id="saveEntry">Save</button>
+      <div id="entryList"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
