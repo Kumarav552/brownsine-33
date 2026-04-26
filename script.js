@@ -1,556 +1,660 @@
-const loginPage = document.getElementById("loginPage");
-const loginForm = document.getElementById("loginForm");
-const signUpPage = document.getElementById("signUpPage");
-const signUpForm = document.getElementById("signUpForm");
-const savedAccountsSelect = document.getElementById("savedAccounts");
+const STORAGE_KEYS = {
+  auth: "Aishu smart-savings-auth",
+  savings: "Aishu smart-savings-data",
+  savingsByAccount: "smart-savings-data-by-account",
+  profilesByAccount: "smart-savings-profiles-by-account"
+};
 
-const homePage = document.getElementById("homePage");
-const profilePage = document.getElementById("profilePage");
-const calendar = document.getElementById("calendar");
-const monthYear = document.getElementById("monthYear");
-const modal = document.getElementById("entryModal");
-const selectedDateText = document.getElementById("selectedDate");
-const entryList = document.getElementById("entryList");
-const dailyTransactions = document.getElementById("dailyTransactions");
-const transactionsTitle = document.getElementById("transactionsTitle");
-
-const incomeInput = document.getElementById("incomeInput");
-const expenseInput = document.getElementById("expenseInput");
-const categoryInput = document.getElementById("categoryInput");
-const noteInput = document.getElementById("noteInput");
-
-const monthIncome = document.getElementById("monthIncome");
-const monthExpense = document.getElementById("monthExpense");
-const monthSavings = document.getElementById("monthSavings");
-const selectedIncome = document.getElementById("selectedIncome");
-const selectedExpense = document.getElementById("selectedExpense");
-const selectedBalance = document.getElementById("selectedBalance");
-
-const themeToggle = document.getElementById("themeToggle");
-const headerProfilePhoto = document.getElementById("headerProfilePhoto");
-const headerAvatarFallback = document.getElementById("headerAvatarFallback");
-const profilePhotoPreview = document.getElementById("profilePhotoPreview");
-const profilePhotoFallback = document.getElementById("profilePhotoFallback");
-const profilePhotoInput = document.getElementById("profilePhotoInput");
-const navButtons = [
-  document.getElementById("bottomHome"),
-  document.getElementById("bottomCalendar"),
-  document.getElementById("bottomReports")
+const defaultSavingsData = [
+  { day: "24", month: "Apr", year: 2026, note: "Saved from pocket money", amount: 500, time: "09:30 AM" },
+  { day: "22", month: "Apr", year: 2026, note: "Gift money saved", amount: 300, time: "07:15 PM" },
+  { day: "20", month: "Apr", year: 2026, note: "Saved from allowance", amount: 200, time: "11:45 AM" },
+  { day: "18", month: "Apr", year: 2026, note: "Extra money saved", amount: 800, time: "04:20 PM" },
+  { day: "15", month: "Apr", year: 2026, note: "Part-time work", amount: 1000, time: "06:30 PM" },
+  { day: "10", month: "Apr", year: 2026, note: "Saved from pocket money", amount: 400, time: "08:10 AM" },
+  { day: "05", month: "Apr", year: 2026, note: "Gift money saved", amount: 750, time: "07:45 PM" },
+  { day: "01", month: "Apr", year: 2026, note: "Month started", amount: 2300, time: "09:00 AM" }
 ];
 
-let currentDate = new Date();
-let data = JSON.parse(localStorage.getItem("RKFinanceData")) || {};
-let selectedDay = formatKey(
-  currentDate.getFullYear(),
-  currentDate.getMonth(),
-  currentDate.getDate()
-);
-let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+const MONTH_ORDER = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function formatKey(year, month, day) {
-  return `${year}-${month}-${day}`;
+function formatRupees(value) {
+  return `\u20B9 ${value.toLocaleString("en-IN")}`;
 }
 
-function parseKey(key) {
-  const [year, month, day] = key.split("-").map(Number);
-  return { year, month, day };
+function parseAmount(value) {
+  const cleanedValue = String(value).replace(/[^\d.]/g, "");
+  return Number(cleanedValue);
 }
 
-function saveData() {
-  localStorage.setItem("roseFinanceData", JSON.stringify(data));
+function normalizeAccountKey(value) {
+  return String(value || "guest@smartsave.app").trim().toLowerCase();
 }
 
-function getStoredAccounts() {
-  const accounts = JSON.parse(localStorage.getItem("users")) || [];
-  const legacyUser = JSON.parse(localStorage.getItem("user"));
-
-  if (legacyUser && !accounts.some(account => account.username === legacyUser.username)) {
-    accounts.push(legacyUser);
-    localStorage.setItem("users", JSON.stringify(accounts));
-  }
-
-  return accounts;
+function getInitialFromEmail(email) {
+  return normalizeAccountKey(email).charAt(0).toUpperCase() || "A";
 }
 
-function saveStoredAccounts(accounts) {
-  localStorage.setItem("users", JSON.stringify(accounts));
+function getDisplayName(email) {
+  const [namePart] = normalizeAccountKey(email).split("@");
+  return namePart
+    .split(/[.\-_]/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ") || "Saver";
 }
 
-function setCurrentUser(user) {
-  currentUser = user || null;
-  localStorage.setItem("currentUser", JSON.stringify(currentUser));
-  updateAvatarViews();
-}
-
-function refreshAccountOptions() {
-  const accounts = getStoredAccounts();
-  savedAccountsSelect.innerHTML = '<option value="">Use default account or type manually</option>';
-
-  accounts.forEach(account => {
-    const option = document.createElement("option");
-    option.value = account.username;
-    option.textContent = `${account.username} (${account.email})`;
-    savedAccountsSelect.appendChild(option);
-  });
-}
-
-function getInitials(name) {
-  if (!name) {
-    return "RK";
-  }
-
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase() || "")
-    .join("") || "RK";
-}
-
-function setPhotoState(imageElement, fallbackElement, photo, fallbackText) {
-  if (photo) {
-    imageElement.src = photo;
-    imageElement.style.display = "block";
-    fallbackElement.style.display = "none";
-  } else {
-    imageElement.removeAttribute("src");
-    imageElement.style.display = "none";
-    fallbackElement.style.display = "grid";
-    fallbackElement.textContent = fallbackText;
-  }
-}
-
-function updateAvatarViews() {
-  const fallbackText = getInitials(currentUser?.username);
-  const photo = currentUser?.photo || "";
-
-  setPhotoState(headerProfilePhoto, headerAvatarFallback, photo, fallbackText);
-  setPhotoState(profilePhotoPreview, profilePhotoFallback, photo, fallbackText);
-}
-
-function updateStoredAccount(updatedUser) {
-  const accounts = getStoredAccounts();
-  const existingIndex = accounts.findIndex(account => account.username === updatedUser.username);
-
-  if (existingIndex >= 0) {
-    accounts[existingIndex] = { ...accounts[existingIndex], ...updatedUser };
-  } else {
-    accounts.push(updatedUser);
-  }
-
-  saveStoredAccounts(accounts);
-  localStorage.setItem("user", JSON.stringify(updatedUser));
-  setCurrentUser(updatedUser);
-  refreshAccountOptions();
-}
-
-function formatCurrency(amount) {
-  return `\u20B9${Number(amount || 0).toLocaleString("en-IN")}`;
-}
-
-function getCategoryIcon(category) {
-  const icons = {
-    Food: "FD",
-    Travel: "TR",
-    Bills: "BL",
-    Shopping: "SP",
-    Entertainment: "EN",
-    Other: "OT"
+function getCurrentMonthInfo() {
+  const now = new Date();
+  return {
+    shortMonth: now.toLocaleString("en-IN", { month: "short" }),
+    fullMonth: now.toLocaleString("en-IN", { month: "long", year: "numeric" }),
+    fullDate: now.toLocaleString("en-IN", { day: "numeric", month: "long", year: "numeric" })
   };
-
-  return icons[category] || "OT";
 }
 
-function setActiveNav(activeButton) {
-  navButtons.forEach(button => {
-    button.classList.toggle("active", button === activeButton);
-  });
+function formatMonthYear(date) {
+  return date.toLocaleString("en-IN", { month: "long", year: "numeric" });
 }
 
-function showHome() {
-  homePage.style.display = "grid";
-  profilePage.style.display = "none";
-  setActiveNav(document.getElementById("bottomHome"));
+function formatFullDate(date) {
+  return date.toLocaleString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
 
-function showProfile() {
-  homePage.style.display = "none";
-  profilePage.style.display = "grid";
-  setActiveNav(document.getElementById("bottomCalendar"));
-  loadProfile();
+function getEntryMonthIndex(entry) {
+  return MONTH_ORDER.indexOf(entry.month);
 }
 
-function ensureSelectedDayInCurrentMonth(year, month) {
-  const selected = parseKey(selectedDay);
-  if (selected.year !== year || selected.month !== month) {
-    selectedDay = formatKey(year, month, 1);
-  }
-}
-
-function generateCalendar() {
-  calendar.innerHTML = "";
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const today = new Date();
-
-  ensureSelectedDayInCurrentMonth(year, month);
-  monthYear.innerText = `${currentDate.toLocaleString("default", { month: "long" })} ${year}`;
-
-  for (let i = 0; i < firstDayIndex; i += 1) {
-    const emptyCell = document.createElement("div");
-    emptyCell.className = "empty-day";
-    calendar.appendChild(emptyCell);
-  }
-
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    const key = formatKey(year, month, day);
-    const dayDiv = document.createElement("div");
-    const dayData = data[key];
-    const hasExpense = (dayData?.expenses || []).length > 0;
-
-    dayDiv.className = "day";
-    dayDiv.innerText = day;
-
-    if (hasExpense) {
-      dayDiv.classList.add("has-entry");
-    }
-
-    if (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    ) {
-      dayDiv.classList.add("today");
-    }
-
-    if (key === selectedDay) {
-      dayDiv.classList.add("selected");
-    }
-
-    if (hasExpense) {
-      const totalExpense = dayData.expenses.reduce((sum, entry) => sum + entry.amount, 0);
-      const badge = document.createElement("div");
-      badge.className = "badge";
-      badge.innerText = totalExpense > 999 ? "999+" : totalExpense;
-      dayDiv.appendChild(badge);
-    }
-
-    dayDiv.onclick = () => openModal(year, month, day);
-    calendar.appendChild(dayDiv);
-  }
-
-  updateSummary();
-  renderSelectedDayDetails();
-}
-
-function renderSelectedDayDetails() {
-  const selected = parseKey(selectedDay);
-  const dateLabel = new Date(selected.year, selected.month, selected.day).toLocaleDateString(
-    "en-US",
-    {
-      month: "short",
-      day: "numeric"
-    }
-  );
-  const dayData = data[selectedDay] || { income: 0, expenses: [] };
-  const totalExpense = dayData.expenses.reduce((sum, entry) => sum + entry.amount, 0);
-  const balance = (dayData.income || 0) - totalExpense;
-
-  transactionsTitle.innerText = `Transactions - ${dateLabel}`;
-  selectedIncome.innerText = formatCurrency(dayData.income || 0);
-  selectedExpense.innerText = formatCurrency(totalExpense);
-  selectedBalance.innerText = formatCurrency(balance);
-
-  dailyTransactions.innerHTML = "";
-
-  if (dayData.expenses.length === 0) {
-    dailyTransactions.innerHTML = '<div class="empty-state">No transactions for this day yet.</div>';
-    return;
-  }
-
-  dayData.expenses.forEach(entry => {
-    const row = document.createElement("div");
-    row.className = "transaction-item";
-    row.innerHTML = `
-      <div class="transaction-icon">${getCategoryIcon(entry.category)}</div>
-      <div class="transaction-meta">
-        <strong>${entry.category}</strong>
-        <span>${entry.note || "No note added"}</span>
-      </div>
-      <div class="transaction-amount">${formatCurrency(entry.amount)}</div>
-    `;
-    dailyTransactions.appendChild(row);
-  });
-}
-
-function openModal(year, month, day) {
-  selectedDay = formatKey(year, month, day);
-  selectedDateText.innerText = `${day} ${monthYear.innerText}`;
-  modal.style.display = "flex";
-  loadEntries();
-  generateCalendar();
-}
-
-function loadEntries() {
-  entryList.innerHTML = "";
-  const entries = data[selectedDay]?.expenses || [];
-
-  entries.forEach((entry, index) => {
-    const div = document.createElement("div");
-    div.className = "entry-item";
-    div.innerHTML = `
-      <div class="transaction-icon">${getCategoryIcon(entry.category)}</div>
-      <div class="transaction-meta">
-        <strong>${formatCurrency(entry.amount)} - ${entry.category}</strong>
-        <span>${entry.note || "No note added"}</span>
-      </div>
-      <button onclick="deleteEntry(${index})">X</button>
-    `;
-    entryList.appendChild(div);
-  });
-
-  if (!entries.length) {
-    entryList.innerHTML = '<div class="empty-state">Add income or expenses for this date.</div>';
-  }
-}
-
-function deleteEntry(index) {
-  data[selectedDay].expenses.splice(index, 1);
-  saveData();
-  loadEntries();
-  generateCalendar();
-}
-
-window.deleteEntry = deleteEntry;
-
-function updateSummary() {
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  let totalIncome = 0;
-  let totalExpense = 0;
-
-  Object.keys(data).forEach(key => {
-    const [storedYear, storedMonth] = key.split("-").map(Number);
-    if (storedYear === year && storedMonth === month) {
-      totalIncome += data[key].income || 0;
-      totalExpense += (data[key].expenses || []).reduce((sum, entry) => sum + entry.amount, 0);
-    }
-  });
-
-  monthIncome.innerText = formatCurrency(totalIncome);
-  monthExpense.innerText = formatCurrency(totalExpense);
-  monthSavings.innerText = formatCurrency(totalIncome - totalExpense);
-}
-
-function loadProfile() {
-  const user = currentUser;
-  if (user) {
-    document.getElementById("profileUsername").innerText = user.username;
-    document.getElementById("profileEmail").innerText = user.email;
-    document.getElementById("profileSince").innerText = new Date().toLocaleDateString("en-IN");
-  } else {
-    document.getElementById("profileUsername").innerText = "Default User";
-    document.getElementById("profileEmail").innerText = "default@finance.local";
-    document.getElementById("profileSince").innerText = new Date().toLocaleDateString("en-IN");
-  }
-
-  updateAvatarViews();
-}
-
-loginForm.addEventListener("submit", event => {
-  event.preventDefault();
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  const storedAccounts = getStoredAccounts();
-  const matchedUser = storedAccounts.find(
-    account => account.username === username && account.password === password
-  );
-
-  const defaultLogin = username === "sanjay" && password === "2005";
-  const registeredLogin = Boolean(matchedUser);
-
-  if (defaultLogin || registeredLogin) {
-    setCurrentUser(defaultLogin ? {
-      username: "sanjay",
-      email: "default@finance.local",
-      photo: ""
-    } : matchedUser);
-    loginPage.style.display = "none";
-    showHome();
-    generateCalendar();
-  } else {
-    alert("Invalid username or password");
-  }
-});
-
-signUpForm.addEventListener("submit", event => {
-  event.preventDefault();
-  const username = document.getElementById("signUpUsername").value;
-  const email = document.getElementById("signUpEmail").value;
-  const password = document.getElementById("signUpPassword").value;
-  const confirm = document.getElementById("confirmPassword").value;
-
-  if (password !== confirm) {
-    alert("Passwords do not match");
-    return;
-  }
-
-  if (username && email && password) {
-    const accounts = getStoredAccounts();
-    const duplicate = accounts.some(
-      account => account.username.toLowerCase() === username.toLowerCase()
-    );
-
-    if (duplicate) {
-      alert("That username already exists. Please choose another one.");
-      return;
-    }
-
-    const newAccount = { username, email, password, photo: "" };
-    accounts.push(newAccount);
-    saveStoredAccounts(accounts);
-    localStorage.setItem("user", JSON.stringify(newAccount));
-    refreshAccountOptions();
-    alert("Sign up successful! Please login.");
-    signUpPage.style.display = "none";
-    loginPage.style.display = "flex";
-    signUpForm.reset();
-    savedAccountsSelect.value = username;
-    document.getElementById("username").value = username;
-    document.getElementById("password").value = "";
-  } else {
-    alert("Please fill all fields");
-  }
-});
-
-savedAccountsSelect.addEventListener("change", event => {
-  const selectedUsername = event.target.value;
-  const account = getStoredAccounts().find(item => item.username === selectedUsername);
-
-  if (!account) {
-    document.getElementById("username").value = "";
-    document.getElementById("password").value = "";
-    return;
-  }
-
-  document.getElementById("username").value = account.username;
-  document.getElementById("password").value = account.password;
-});
-
-document.getElementById("signUpLink").addEventListener("click", event => {
-  event.preventDefault();
-  loginPage.style.display = "none";
-  signUpPage.style.display = "flex";
-});
-
-document.getElementById("loginLink").addEventListener("click", event => {
-  event.preventDefault();
-  signUpPage.style.display = "none";
-  loginPage.style.display = "flex";
-});
-
-document.getElementById("logout").addEventListener("click", () => {
-  profilePage.style.display = "none";
-  homePage.style.display = "grid";
-  loginPage.style.display = "flex";
-  modal.style.display = "none";
-  setCurrentUser(null);
-  loginForm.reset();
-  savedAccountsSelect.value = "";
-  setActiveNav(document.getElementById("bottomHome"));
-});
-
-profilePhotoInput.addEventListener("change", event => {
-  const file = event.target.files[0];
-
-  if (!file || !currentUser) {
-    return;
-  }
-
-  if (!file.type.startsWith("image/")) {
-    alert("Please choose an image file.");
-    profilePhotoInput.value = "";
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = loadEvent => {
-    const photoData = loadEvent.target.result;
-    const updatedUser = { ...currentUser, photo: photoData };
-    updateStoredAccount(updatedUser);
-    loadProfile();
-    alert("Profile photo updated.");
-    profilePhotoInput.value = "";
+function normalizeEntry(entry) {
+  return {
+    ...entry,
+    amount: parseAmount(entry.amount),
+    year: Number(entry.year) || new Date().getFullYear()
   };
-  reader.readAsDataURL(file);
-});
+}
 
-document.getElementById("homeBtn").addEventListener("click", showHome);
-document.getElementById("profileBtn").addEventListener("click", showProfile);
-document.getElementById("bottomHome").addEventListener("click", showHome);
-document.getElementById("bottomCalendar").addEventListener("click", showProfile);
-document.getElementById("bottomReports").addEventListener("click", () => {
-  showHome();
-  alert("Reports view can be added next.");
-});
+function getSavingsData() {
+  const currentUser = getCurrentUser();
+  const accountKey = normalizeAccountKey(currentUser?.email);
+  const byAccountStored = localStorage.getItem(STORAGE_KEYS.savingsByAccount);
+  const legacyStored = localStorage.getItem(STORAGE_KEYS.savings);
 
-document.getElementById("saveEntry").onclick = () => {
-  const income = parseFloat(incomeInput.value) || 0;
-  const expense = parseFloat(expenseInput.value) || 0;
+  try {
+    const byAccount = byAccountStored ? JSON.parse(byAccountStored) : {};
 
-  if (!data[selectedDay]) {
-    data[selectedDay] = { income: 0, expenses: [] };
+    if (!byAccount[accountKey]) {
+      byAccount[accountKey] = legacyStored ? JSON.parse(legacyStored) : [...defaultSavingsData];
+      localStorage.setItem(STORAGE_KEYS.savingsByAccount, JSON.stringify(byAccount));
+    }
+
+    return byAccount[accountKey].map(normalizeEntry);
+  } catch (_error) {
+    const resetData = { [accountKey]: [...defaultSavingsData] };
+    localStorage.setItem(STORAGE_KEYS.savingsByAccount, JSON.stringify(resetData));
+    return [...defaultSavingsData];
+  }
+}
+
+function saveSavingsData(data) {
+  const currentUser = getCurrentUser();
+  const accountKey = normalizeAccountKey(currentUser?.email);
+  const byAccountStored = localStorage.getItem(STORAGE_KEYS.savingsByAccount);
+  let byAccount = {};
+
+  try {
+    byAccount = byAccountStored ? JSON.parse(byAccountStored) : {};
+  } catch (_error) {
+    byAccount = {};
   }
 
-  if (income > 0) {
-    data[selectedDay].income = income;
+  byAccount[accountKey] = data.map(normalizeEntry);
+  localStorage.setItem(STORAGE_KEYS.savingsByAccount, JSON.stringify(byAccount));
+}
+
+function setAuthState(user) {
+  localStorage.setItem(STORAGE_KEYS.auth, JSON.stringify(user));
+}
+
+function isLoggedIn() {
+  const user = getCurrentUser();
+  return Boolean(user?.loggedIn && user?.email);
+}
+
+function getCurrentUser() {
+  const stored = localStorage.getItem(STORAGE_KEYS.auth);
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored);
+    if (typeof parsed === "string") return null;
+    return parsed;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function clearAuthState() {
+  localStorage.removeItem(STORAGE_KEYS.auth);
+}
+
+function getProfilesByAccount() {
+  const stored = localStorage.getItem(STORAGE_KEYS.profilesByAccount);
+  if (!stored) return {};
+
+  try {
+    return JSON.parse(stored);
+  } catch (_error) {
+    return {};
+  }
+}
+
+function saveProfilesByAccount(profiles) {
+  localStorage.setItem(STORAGE_KEYS.profilesByAccount, JSON.stringify(profiles));
+}
+
+function getCurrentUserProfile() {
+  const user = getCurrentUser();
+  const accountKey = normalizeAccountKey(user?.email);
+  const profiles = getProfilesByAccount();
+  return profiles[accountKey] || {};
+}
+
+function saveCurrentUserProfile(profilePatch) {
+  const user = getCurrentUser();
+  const accountKey = normalizeAccountKey(user?.email);
+  const profiles = getProfilesByAccount();
+  profiles[accountKey] = {
+    ...(profiles[accountKey] || {}),
+    ...profilePatch
+  };
+  saveProfilesByAccount(profiles);
+}
+
+function applyAvatarToElement(element, profile, fallbackText) {
+  if (!element) return;
+
+  if (profile.photo) {
+    element.textContent = "";
+    element.style.backgroundImage = `url(${profile.photo})`;
+    element.style.backgroundSize = "cover";
+    element.style.backgroundPosition = "center";
+    element.classList.add("has-photo");
+    return;
   }
 
-  if (expense > 0) {
-    data[selectedDay].expenses.push({
-      amount: expense,
-      category: categoryInput.value,
-      note: noteInput.value.trim()
+  element.textContent = profile.avatar || fallbackText;
+  element.style.backgroundImage = "";
+  element.style.backgroundSize = "";
+  element.style.backgroundPosition = "";
+  element.classList.remove("has-photo");
+}
+
+function renderUserUI() {
+  const user = getCurrentUser();
+  if (!user?.email) return;
+
+  const displayName = getDisplayName(user.email);
+  const currentProfile = getCurrentUserProfile();
+  const avatarValue = currentProfile.avatar || getInitialFromEmail(user.email);
+  const userLabel = document.getElementById("currentUserLabel");
+  const userAvatar = document.getElementById("currentUserAvatar");
+  const profileName = document.getElementById("profileName");
+  const profileEmail = document.getElementById("profileEmail");
+  const profileAvatar = document.getElementById("profileAvatar");
+
+  if (userLabel) userLabel.textContent = user.email;
+  applyAvatarToElement(userAvatar, currentProfile, avatarValue);
+  if (profileName) profileName.textContent = displayName;
+  if (profileEmail) profileEmail.textContent = user.email;
+  applyAvatarToElement(profileAvatar, currentProfile, avatarValue);
+}
+
+function setupProfileOptions() {
+  const avatarOptions = document.querySelectorAll(".avatar-option");
+  const avatarMessage = document.getElementById("avatarMessage");
+  const avatarUpload = document.getElementById("avatarUpload");
+  const removePhotoButton = document.getElementById("removePhotoButton");
+  if (!avatarOptions.length) return;
+
+  const currentProfile = getCurrentUserProfile();
+  const currentAvatar = currentProfile.avatar || getInitialFromEmail(getCurrentUser()?.email);
+
+  avatarOptions.forEach((option) => {
+    option.classList.toggle("active", option.dataset.avatar === currentAvatar);
+
+    option.addEventListener("click", () => {
+      const avatarValue = option.dataset.avatar || "A";
+      saveCurrentUserProfile({ avatar: avatarValue, photo: "" });
+      renderUserUI();
+
+      avatarOptions.forEach((item) => {
+        item.classList.toggle("active", item.dataset.avatar === avatarValue);
+      });
+
+      if (avatarMessage) {
+        avatarMessage.textContent = "Profile photo updated.";
+        avatarMessage.classList.remove("error");
+      }
+    });
+  });
+
+  if (avatarUpload) {
+    avatarUpload.addEventListener("change", () => {
+      const selectedFile = avatarUpload.files?.[0];
+      if (!selectedFile) return;
+
+      if (!selectedFile.type.startsWith("image/")) {
+        if (avatarMessage) {
+          avatarMessage.textContent = "Please choose an image file.";
+          avatarMessage.classList.add("error");
+        }
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === "string" ? reader.result : "";
+        saveCurrentUserProfile({ photo: result });
+        renderUserUI();
+        if (avatarMessage) {
+          avatarMessage.textContent = "Profile photo uploaded.";
+          avatarMessage.classList.remove("error");
+        }
+      };
+      reader.readAsDataURL(selectedFile);
     });
   }
 
-  incomeInput.value = "";
-  expenseInput.value = "";
+  if (removePhotoButton) {
+    removePhotoButton.addEventListener("click", () => {
+      saveCurrentUserProfile({ photo: "" });
+      renderUserUI();
+      if (avatarUpload) avatarUpload.value = "";
+      if (avatarMessage) {
+        avatarMessage.textContent = "Profile photo removed.";
+        avatarMessage.classList.remove("error");
+      }
+    });
+  }
+}
+
+function updateSummaryUI(data) {
+  const total = data.reduce((sum, entry) => sum + entry.amount, 0);
+  const { shortMonth, fullMonth } = getCurrentMonthInfo();
+  const monthlyTotal = data
+    .filter((entry) => entry.month === shortMonth)
+    .reduce((sum, entry) => sum + entry.amount, 0);
+  const goal = 10000;
+  const progress = Math.min((monthlyTotal / goal) * 100, 100);
+
+  const totalSavings = document.getElementById("totalSavings");
+  const monthlySavings = document.getElementById("monthlySavings");
+  const monthlyLabel = document.getElementById("monthlyLabel");
+  const historySummary = document.getElementById("historySummary");
+  const historyMonthLabel = document.getElementById("historyMonthLabel");
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  const entryCount = document.getElementById("entryCount");
+
+  if (totalSavings) totalSavings.textContent = formatRupees(total);
+  if (monthlySavings) monthlySavings.textContent = formatRupees(monthlyTotal);
+  if (monthlyLabel) monthlyLabel.textContent = fullMonth;
+  if (historySummary) historySummary.textContent = total.toLocaleString("en-IN");
+  if (historyMonthLabel) historyMonthLabel.textContent = fullMonth;
+  if (progressBar) progressBar.style.width = `${progress}%`;
+  if (progressText) progressText.textContent = `${Math.round(progress)}% of your goal reached`;
+  if (entryCount) entryCount.textContent = String(data.length);
+}
+
+function renderHistory(data) {
+  const historyList = document.getElementById("historyList");
+  if (!historyList) return;
+
+  historyList.innerHTML = "";
+  if (data.length === 0) {
+    historyList.innerHTML = '<p class="empty-history">No savings yet. Add your first entry.</p>';
+    return;
+  }
+
+  data.forEach((entry, index) => {
+    const item = document.createElement("article");
+    item.className = "history-item";
+    const sourceIndex = Number.isInteger(entry.sourceIndex) ? entry.sourceIndex : index;
+    item.innerHTML = `
+      <div class="history-date">
+        <strong>${entry.day}</strong>
+        <span>${entry.month}</span>
+      </div>
+      <div class="history-meta">
+        <p>${entry.note}</p>
+        <small>${entry.time}</small>
+      </div>
+      <div class="history-actions">
+        <div class="history-amount">${formatRupees(entry.amount)}</div>
+        <button type="button" class="delete-entry-button" data-entry-index="${sourceIndex}" aria-label="Delete savings entry">Delete</button>
+      </div>
+    `;
+    historyList.appendChild(item);
+  });
+}
+
+function setupHistoryActions(data, getVisibleEntries, refreshHistoryView) {
+  const historyList = document.getElementById("historyList");
+  const pageMessage = document.getElementById("pageMessage");
+  if (!historyList) return;
+
+  historyList.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest(".delete-entry-button");
+    if (!deleteButton) return;
+
+    const entryIndex = Number(deleteButton.dataset.entryIndex);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0 || entryIndex >= data.length) return;
+
+    data.splice(entryIndex, 1);
+    saveSavingsData(data);
+    refreshHistoryView();
+    updateSummaryUI(data);
+
+    if (pageMessage) {
+      pageMessage.textContent = "Savings entry deleted.";
+      pageMessage.classList.remove("error");
+    }
+  });
+}
+
+function setupMonthlyHistory(data) {
+  const monthLabel = document.getElementById("historyMonthLabel");
+  const monthSummary = document.getElementById("historySummary");
+  const prevButton = document.getElementById("historyPrevMonth");
+  const nextButton = document.getElementById("historyNextMonth");
+  if (!monthLabel || !monthSummary || !prevButton || !nextButton) return null;
+
+  let selectedMonth = new Date();
+
+  function getVisibleEntries() {
+    const monthIndex = selectedMonth.getMonth();
+    const year = selectedMonth.getFullYear();
+    return data
+      .map((entry, index) => ({ ...entry, sourceIndex: index }))
+      .filter((entry) => getEntryMonthIndex(entry) === monthIndex && entry.year === year);
+  }
+
+  function refreshHistoryView() {
+    const visibleEntries = getVisibleEntries();
+    monthLabel.textContent = formatMonthYear(selectedMonth);
+    monthSummary.textContent = visibleEntries.reduce((sum, entry) => sum + entry.amount, 0).toLocaleString("en-IN");
+    renderHistory(visibleEntries);
+  }
+
+  prevButton.addEventListener("click", () => {
+    selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1);
+    refreshHistoryView();
+  });
+
+  nextButton.addEventListener("click", () => {
+    selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1);
+    refreshHistoryView();
+  });
+
+  refreshHistoryView();
+  return { getVisibleEntries, refreshHistoryView };
+}
+
+function protectRoute() {
+  const currentPage = document.body.dataset.page;
+  if (currentPage && !isLoggedIn()) {
+    window.location.href = "index.html";
+    return true;
+  }
+
+  return false;
+}
+
+function setupLogin() {
+  const loginForm = document.getElementById("loginForm");
+  const emailInput = document.getElementById("email");
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("password");
+  const loginMessage = document.getElementById("loginMessage");
+  const googleLoginButton = document.getElementById("googleLoginButton");
+
+  function completeLogin(message, emailValue, provider = "email") {
+    const normalizedEmail = normalizeAccountKey(emailValue);
+    if (loginMessage) {
+      loginMessage.textContent = message;
+      loginMessage.classList.remove("error");
+    }
+    setAuthState({
+      loggedIn: true,
+      email: normalizedEmail,
+      provider
+    });
+    window.location.href = "home.html";
+  }
+
+  if (isLoggedIn() && loginMessage) {
+    const currentUser = getCurrentUser();
+    loginMessage.textContent = `You are already logged in as ${currentUser.email}. Sign in again or open Home.`;
+  }
+
+  if (togglePassword && passwordInput) {
+    togglePassword.addEventListener("click", () => {
+      const isPasswordField = passwordInput.type === "password";
+      passwordInput.type = isPasswordField ? "text" : "password";
+      togglePassword.textContent = isPasswordField ? "Hide" : "Show";
+    });
+  }
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      completeLogin(
+        "Login successful. Opening your savings app...",
+        emailInput?.value || "hello@smartsave.app",
+        "email"
+      );
+    });
+  }
+
+  if (googleLoginButton) {
+    googleLoginButton.addEventListener("click", () => {
+      completeLogin(
+        "Google sign-in successful. Opening your savings app...",
+        emailInput?.value || "google.user@smartsave.app",
+        "google"
+      );
+    });
+  }
+}
+
+function setupLogout() {
+  const logoutButton = document.getElementById("logoutButton");
+  if (!logoutButton) return;
+
+  logoutButton.addEventListener("click", () => {
+    clearAuthState();
+    window.location.href = "index.html";
+  });
+}
+
+function setupAddForm(data) {
+  const savingsForm = document.getElementById("savingsForm");
+  if (!savingsForm) return;
+
+  const amountInput = document.getElementById("amountInput");
+  const noteInput = document.getElementById("noteInput");
+  const selectedDate = document.getElementById("selectedDate");
+  const saveButton = document.getElementById("saveButton");
+  const amountChips = document.querySelectorAll(".amount-chip");
+  const formMessage = document.getElementById("formMessage");
+  const calendarDays = document.getElementById("calendarDays");
+  const calendarMonthLabel = document.getElementById("calendarMonthLabel");
+  const prevMonthButton = document.getElementById("prevMonthButton");
+  const nextMonthButton = document.getElementById("nextMonthButton");
+  const { fullDate } = getCurrentMonthInfo();
+  let activeDate = new Date();
+  let calendarDate = new Date(activeDate.getFullYear(), activeDate.getMonth(), 1);
+
+  selectedDate.value = fullDate;
+  selectedDate.dataset.iso = activeDate.toISOString();
   noteInput.value = "";
 
-  saveData();
-  loadEntries();
-  generateCalendar();
-};
+  amountChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      amountInput.value = chip.dataset.amount || "0";
+      amountInput.focus();
+    });
+  });
 
-document.getElementById("closeModal").onclick = () => {
-  modal.style.display = "none";
-};
+  function renderCalendar() {
+    if (!calendarDays || !calendarMonthLabel) return;
 
-document.getElementById("prevMonth").onclick = () => {
-  currentDate.setMonth(currentDate.getMonth() - 1);
-  generateCalendar();
-};
+    calendarMonthLabel.textContent = formatMonthYear(calendarDate);
+    calendarDays.innerHTML = "";
 
-document.getElementById("nextMonth").onclick = () => {
-  currentDate.setMonth(currentDate.getMonth() + 1);
-  generateCalendar();
-};
+    const firstDayIndex = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay();
+    const daysInMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate();
+    const prevMonthDays = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 0).getDate();
 
-let savedTheme = localStorage.getItem("theme") || "light";
-document.body.classList.add(savedTheme);
+    for (let i = 0; i < firstDayIndex; i += 1) {
+      const dayCell = document.createElement("button");
+      dayCell.type = "button";
+      dayCell.className = "calendar-day muted";
+      dayCell.textContent = String(prevMonthDays - firstDayIndex + i + 1);
+      calendarDays.appendChild(dayCell);
+    }
 
-themeToggle.onclick = () => {
-  document.body.classList.toggle("dark");
-  document.body.classList.toggle("light");
-  const mode = document.body.classList.contains("dark") ? "dark" : "light";
-  localStorage.setItem("theme", mode);
-};
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const dayCell = document.createElement("button");
+      dayCell.type = "button";
+      dayCell.className = "calendar-day";
+      dayCell.textContent = String(day);
 
-refreshAccountOptions();
-updateAvatarViews();
-generateCalendar();
-showHome();
+      const candidateDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
+      if (
+        candidateDate.getDate() === activeDate.getDate() &&
+        candidateDate.getMonth() === activeDate.getMonth() &&
+        candidateDate.getFullYear() === activeDate.getFullYear()
+      ) {
+        dayCell.classList.add("selected-day");
+      }
+
+      dayCell.addEventListener("click", () => {
+        activeDate = candidateDate;
+        selectedDate.value = formatFullDate(candidateDate);
+        selectedDate.dataset.iso = candidateDate.toISOString();
+        renderCalendar();
+      });
+
+      calendarDays.appendChild(dayCell);
+    }
+
+    while (calendarDays.children.length < 35) {
+      const dayCell = document.createElement("button");
+      dayCell.type = "button";
+      dayCell.className = "calendar-day muted";
+      dayCell.textContent = String(calendarDays.children.length - (firstDayIndex + daysInMonth) + 1);
+      calendarDays.appendChild(dayCell);
+    }
+  }
+
+  if (prevMonthButton) {
+    prevMonthButton.addEventListener("click", () => {
+      calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
+      renderCalendar();
+    });
+  }
+
+  if (nextMonthButton) {
+    nextMonthButton.addEventListener("click", () => {
+      calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
+      renderCalendar();
+    });
+  }
+
+  renderCalendar();
+
+  function submitSavings(event) {
+    event.preventDefault();
+
+    if (formMessage) {
+      formMessage.textContent = "";
+      formMessage.classList.remove("error");
+    }
+
+    const amountValue = parseAmount(amountInput.value);
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      if (formMessage) {
+        formMessage.textContent = "Enter a valid savings amount like 100 or 200.";
+        formMessage.classList.add("error");
+      }
+      amountInput.focus();
+      return;
+    }
+
+    const noteValue = noteInput.value.trim() || "New savings added";
+    const isoDate = selectedDate.dataset.iso || new Date().toISOString();
+    const savedDate = new Date(isoDate);
+    const day = String(savedDate.getDate());
+    const month = savedDate.toLocaleString("en-IN", { month: "short" });
+
+    data.unshift({
+      day,
+      month,
+      year: savedDate.getFullYear(),
+      note: noteValue,
+      amount: amountValue,
+      time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    });
+
+    saveSavingsData(data);
+    sessionStorage.setItem("smart-savings-message", "Savings added successfully.");
+    window.location.href = "history.html";
+  }
+
+  savingsForm.addEventListener("submit", submitSavings);
+
+  if (saveButton) {
+    saveButton.addEventListener("click", () => {
+      if (typeof savingsForm.requestSubmit === "function") {
+        savingsForm.requestSubmit();
+      } else {
+        savingsForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+    });
+  }
+}
+
+function initDashboard() {
+  if (protectRoute()) return;
+  setupLogout();
+  renderUserUI();
+  setupProfileOptions();
+
+  const data = getSavingsData();
+  updateSummaryUI(data);
+  const monthlyHistory = setupMonthlyHistory(data);
+  if (!monthlyHistory) {
+    renderHistory(data);
+  }
+  setupHistoryActions(
+    data,
+    monthlyHistory?.getVisibleEntries,
+    monthlyHistory?.refreshHistoryView || (() => renderHistory(data))
+  );
+  setupAddForm(data);
+
+  const flashMessage = sessionStorage.getItem("smart-savings-message");
+  const pageMessage = document.getElementById("pageMessage");
+  if (flashMessage && pageMessage) {
+    pageMessage.textContent = flashMessage;
+    pageMessage.classList.remove("error");
+    sessionStorage.removeItem("smart-savings-message");
+  }
+}
+
+if (document.getElementById("loginForm")) {
+  setupLogin();
+} else {
+  initDashboard();
+}

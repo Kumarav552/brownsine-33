@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Savings History</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="history">
+  <div class="page-shell dashboard-shell">
+    <div class="floating-orbs orb-b"></div>
+    <div class="floating-orbs orb-c"></div>
+
+    <main class="dashboard-page app-dashboard">
+      <section class="phone-card page-card app-phone">
+        <div class="app-meta-bar">
+          <span class="eyebrow">History</span>
+          <div class="top-actions">
+            <div id="statusBadge" class="status-badge logged-in">Logged in</div>
+            <button id="logoutButton" class="mini-action" type="button">Logout</button>
+          </div>
+        </div>
+
+        <div class="screen-header light">
+          <a class="back-button link-chip" href="home.html">&lt;</a>
+          <h4>History</h4>
+          <span class="filter-button">M</span>
+        </div>
+
+        <div class="history-month-switch">
+          <button id="historyPrevMonth" type="button" class="month-switch-button">&lt;</button>
+          <strong id="historyMonthLabel">April 2026</strong>
+          <button id="historyNextMonth" type="button" class="month-switch-button">&gt;</button>
+        </div>
+
+        <div class="history-summary">
+          <div>
+            <p>Monthly Savings</p>
+            <strong>&#8377; <span id="historySummary">6,250</span></strong>
+          </div>
+          <div class="bag-icon">Rs</div>
+        </div>
+
+        <p id="pageMessage" class="form-message"></p>
+        <div id="historyList" class="history-list"></div>
+
+        <nav class="bottom-nav">
+          <a class="nav-item" href="home.html">Home</a>
+          <a class="nav-item" href="add.html">Save</a>
+          <a class="nav-item active" href="history.html">History</a>
+          <a class="nav-item" href="profile.html">Profile</a>
+        </nav>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

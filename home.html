@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aishu Smart Savings Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="home">
+  <div class="page-shell dashboard-shell">
+    <div class="floating-orbs orb-a"></div>
+    <div class="floating-orbs orb-b"></div>
+
+    <main class="dashboard-page app-dashboard">
+      <section class="phone-card page-card app-phone">
+        <div class="app-meta-bar">
+          <span class="eyebrow">Home</span>
+          <div class="top-actions">
+            <div id="statusBadge" class="status-badge logged-in">Logged in</div>
+            <button id="logoutButton" class="mini-action" type="button">Logout</button>
+          </div>
+        </div>
+
+        <div class="phone-topbar">
+          <div>
+            <span class="logo-word">Aishu Savings</span>
+            <p id="currentUserLabel" class="topbar-subtext">Welcome back</p>
+          </div>
+          <div id="currentUserAvatar" class="avatar avatar-photo">A</div>
+        </div>
+
+        <div class="quote-box">
+          <span class="quote-mark">"</span>
+          <p>Save today, secure tomorrow.</p>
+          <span class="quote-mark">"</span>
+        </div>
+
+        <div class="summary-grid">
+          <div class="savings-banner">
+            <div>
+              <p>Total Savings</p>
+              <strong id="totalSavings">&#8377; 6,250</strong>
+              <small>Keep going! You're doing great.</small>
+            </div>
+            <div class="wallet-icon">Rs</div>
+          </div>
+
+          <div class="mini-card monthly-card">
+            <p>This Month Savings</p>
+            <strong id="monthlySavings">&#8377; 6,250</strong>
+            <small id="monthlyLabel">April 2026</small>
+            <div class="progress-track">
+              <div id="progressBar" class="progress-fill"></div>
+            </div>
+            <span id="progressText">62% of your goal reached</span>
+          </div>
+        </div>
+
+        <div class="section-caption">Quick Actions</div>
+        <div class="quick-actions">
+          <a class="action-card action-link" href="add.html">
+            <span class="action-glyph">+</span>
+            <strong>Add Savings</strong>
+            <small>Add your daily savings</small>
+          </a>
+          <a class="action-card action-link" href="history.html">
+            <span class="action-glyph">H</span>
+            <strong>History</strong>
+            <small>View your savings history</small>
+          </a>
+        </div>
+
+        <nav class="bottom-nav">
+          <a class="nav-item active" href="home.html">Home</a>
+          <a class="nav-item" href="add.html">Save</a>
+          <a class="nav-item" href="history.html">History</a>
+          <a class="nav-item" href="profile.html">Profile</a>
+        </nav>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
