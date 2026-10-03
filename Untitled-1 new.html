@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#350b1d" />
+  <title>Aishu's 2nd Love Anniversary</title>
+  <style>
+    :root { --wine:#350b1d; --rose:#e45b7d; --blush:#ffe9e4; --gold:#f3ca80; --ink:#fff8f3; --muted:#f5cbd2; --line:rgba(255,228,215,.32); }
+    * { box-sizing:border-box; }
+    body { min-height:100vh; margin:0; overflow-x:hidden; color:var(--ink); background:var(--wine); font-family:Georgia, "Times New Roman", serif; }
+    .glow { position:fixed; inset:0; pointer-events:none; background:linear-gradient(115deg,rgba(228,91,125,.18),transparent 46%),linear-gradient(300deg,rgba(243,202,128,.13),transparent 42%); }
+    .heart-field { position:fixed; z-index:1; inset:0; overflow:hidden; pointer-events:none; }
+    .heart { position:absolute; top:-32px; width:17px; height:17px; border-radius:3px; background:#ed6b89; box-shadow:inset -4px -5px 6px rgba(95,0,30,.42),inset 3px 3px 5px rgba(255,255,255,.6),5px 8px 12px rgba(13,0,6,.35); transform:rotate(45deg); animation:fall var(--duration) linear forwards; }
+    .heart::before,.heart::after { content:""; position:absolute; width:100%; height:100%; border-radius:50%; background:inherit; box-shadow:inherit; }
+    .heart::before { left:-50%; }
+    .heart::after { top:-50%; }
+    @keyframes fall { from { transform:translate3d(0,-24px,0) rotate(45deg) scale(.7); opacity:0; } 12% { opacity:.95; } to { transform:translate3d(var(--drift),110vh,0) rotate(405deg) scale(1.2); opacity:0; } }
+    .app { position:relative; z-index:2; display:grid; place-items:center; min-height:100vh; padding:28px 18px; }
+    .page { display:none; width:min(460px,100%); min-height:550px; padding:40px 34px; border:1px solid var(--line); border-radius:8px; background:rgba(81,17,42,.82); box-shadow:0 24px 70px rgba(15,0,8,.5); text-align:center; animation:arrive .55s ease both; }
+    .page.active { display:flex; flex-direction:column; justify-content:center; }
+    @keyframes arrive { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .eyebrow { margin-bottom:14px; color:var(--gold); font:700 .68rem/1 Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2 { margin:0; font-weight:400; letter-spacing:0; }
+    h1 { font-size:clamp(2.5rem,9vw,3.8rem); line-height:1.02; }
+    h2 { color:var(--gold); font-size:clamp(2rem,7vw,2.8rem); line-height:1.08; }
+    h1 em,h2 em { color:#ffb7c7; font-style:italic; }
+    p { margin:20px 0 0; color:var(--blush); font-size:1rem; line-height:1.75; }
+    .date-form { display:grid; gap:10px; width:min(320px,100%); margin:28px auto 0; text-align:left; }
+    .date-form label { color:var(--gold); font:700 .68rem/1 Arial,sans-serif; letter-spacing:.1em; }
+    .date-form input { width:100%; padding:14px 15px; border:1px solid var(--line); border-radius:4px; outline:none; background:rgba(255,248,243,.1); color:var(--ink); font:600 1rem Arial,sans-serif; letter-spacing:.08em; }
+    .date-form input::placeholder { color:#e7a9b6; letter-spacing:.03em; }
+    .date-form input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(243,202,128,.15); }
+    .error { min-height:19px; margin:0; color:#ffc5d1; font:.8rem/1.4 Arial,sans-serif; text-align:center; }
+    button { width:100%; margin-top:24px; padding:14px 18px; border:1px solid var(--gold); border-radius:4px; background:var(--rose); color:#fffaf6; cursor:pointer; font:700 .76rem/1 Arial,sans-serif; letter-spacing:.08em; transition:transform .2s ease,background .2s ease,color .2s ease; }
+    button:hover { transform:translateY(-2px); background:var(--gold); color:var(--wine); }
+    button:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+    .little-heart { color:var(--rose); font-size:2rem; line-height:1; }
+    .profile-photo { width:86px; height:86px; margin:0 auto 18px; overflow:hidden; border:3px solid var(--gold); border-radius:50%; box-shadow:0 0 0 6px rgba(228,91,125,.2),0 10px 24px rgba(15,0,8,.42); }
+    .profile-photo img { display:block; width:100%; height:100%; object-fit:cover; object-position:48% 55%; }
+    .story-date { margin-top:28px; padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:var(--gold); font:700 .78rem/1.6 Arial,sans-serif; letter-spacing:.08em; }
+    .story-date span { display:block; margin-top:4px; color:var(--muted); font-size:.75rem; letter-spacing:.04em; }
+    .anniversary-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:24px; }
+    .anniversary-stat { min-height:82px; padding:12px 6px; border:1px solid rgba(243,202,128,.58); border-radius:6px; background:linear-gradient(145deg,rgba(228,91,125,.32),rgba(255,248,243,.08)); box-shadow:0 8px 18px rgba(15,0,8,.25); }
+    .anniversary-stat .icon { display:block; margin-bottom:7px; font-size:1.1rem; line-height:1; }
+    .anniversary-stat strong { display:block; color:var(--gold); font:700 .8rem/1.15 Arial,sans-serif; letter-spacing:.02em; }
+    .anniversary-stat small { display:block; margin-top:4px; color:var(--blush); font:.62rem/1 Arial,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+    .reasons { margin-top:26px; border-top:1px solid var(--line); text-align:left; }
+    .reason { display:flex; gap:14px; align-items:baseline; padding:16px 0; border-bottom:1px solid var(--line); }
+    .reason b { color:var(--gold); font:700 .72rem Arial,sans-serif; letter-spacing:.08em; }
+    .reason span { color:var(--blush); font-size:.98rem; }
+    figure { margin:24px auto 0; }
+    .photo { display:block; width:min(255px,68vw); aspect-ratio:4 / 5; object-fit:cover; object-position:center 64%; border:4px solid var(--gold); border-radius:7px; box-shadow:0 16px 30px rgba(13,0,6,.45); animation:photo-float 4.6s ease-in-out infinite; }
+    .photo.chat-photo { width:min(190px,52vw); aspect-ratio:9 / 16; object-position:center; }
+    figcaption { margin-top:12px; color:var(--muted); font-size:.86rem; font-style:italic; }
+    @keyframes photo-float { 50% { transform:translateY(-8px) rotate(1deg); } }
+    .final-note { max-height:0; margin:0; overflow:hidden; opacity:0; transition:all .45s ease; }
+    .final-note.show { max-height:130px; margin-top:22px; opacity:1; }
+    @media (max-width:430px) { .app { align-items:start; padding:16px 12px; } .page { min-height:calc(100svh - 32px); padding:32px 24px; } .photo { width:min(220px,62vw); } .anniversary-stats { grid-template-columns:repeat(2,1fr); } .anniversary-stat:last-child { grid-column:1 / -1; } }
+    @media (max-height:670px) { .page { min-height:0; padding-block:27px; } .photo { width:min(165px,45vw); } p { margin-top:14px; line-height:1.55; } button { margin-top:18px; } }
+  </style>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="heart-field" id="heartField" aria-hidden="true"></div>
+  <main class="app">
+    <section class="page active" id="loginPage">
+      <div class="little-heart" aria-hidden="true">&hearts;</div>
+      <div class="profile-photo">
+        <img src="images/aishu-profile.jpeg" alt="Aishu's profile photo" />
+      </div>
+      <div class="eyebrow">A private little surprise</div>
+      <h1>For <em>Aishu.</em></h1>
+      <p>Enter the date where our beautiful story began.</p>
+      <form class="date-form" id="dateForm">
+        <label for="anniversaryDate">OUR ANNIVERSARY DATE</label>
+        <input id="anniversaryDate" type="text" inputmode="numeric" maxlength="8" placeholder="DD/MM/YY" autocomplete="off" required />
+        <p class="error" id="dateError" aria-live="polite"></p>
+        <button type="submit">OPEN OUR STORY</button>
+      </form>
+    </section>
+    <section class="page" id="page1">
+      <div class="eyebrow">Chapter one</div>
+      <h1>Hey, <em>Aishu.</em></h1>
+      <p>Two years of laughter, quiet comfort, beautiful memories, and a love that keeps becoming more special with every day.</p>
+      <div class="story-date">05.10.2024 <span>The day our story began</span></div>
+      <button type="button" data-next>BEGIN OUR CELEBRATION</button>
+    </section>
+    <section class="page" id="page2">
+      <div class="eyebrow">Two years of us</div>
+      <h2>Still choosing <em>you.</em></h2>
+      <p>From our first little moments to all the dreams waiting ahead, every version of us has been my favorite.</p>
+      <div class="anniversary-stats" aria-label="Our two years together">
+        <div class="anniversary-stat"><span class="icon">❤️</span><strong>2 Years</strong><small>Our love</small></div>
+        <div class="anniversary-stat"><span class="icon">🗓️</span><strong>730 Days</strong><small>Together</small></div>
+        <div class="anniversary-stat"><span class="icon">⏰</span><strong>17,520 Hours</strong><small>Of us</small></div>
+        <div class="anniversary-stat"><span class="icon">⏳</span><strong>1,051,200 Minutes</strong><small>Memories</small></div>
+        <div class="anniversary-stat"><span class="icon">💞</span><strong>63,072,000 Seconds</strong><small>With you</small></div>
+      </div>
+      <button type="button" data-next>THE LITTLE THINGS</button>
+    </section>
+    <section class="page" id="page3">
+      <div class="eyebrow">Why I adore you</div>
+      <h2>The little things mean <em>everything.</em></h2>
+      <div class="reasons">
+        <div class="reason"><b>01</b><span>Your smile that makes every day lighter.</span></div>
+        <div class="reason"><b>02</b><span>Our silly talks and inside jokes.</span></div>
+        <div class="reason"><b>03</b><span>The calm, happy feeling of being with you.</span></div>
+      </div>
+      <button type="button" data-next>OUR FAVORITE MEMORY</button>
+    </section>
+    <section class="page" id="page4">
+      <div class="eyebrow">Where it all began</div>
+      <h2>One little message, a <em>whole new world.</em></h2>
+      <figure>
+        <img class="photo chat-photo" src="images/where-it-began.jpeg" alt="A treasured first love message" />
+        <figcaption>The conversation that became our favorite story.</figcaption>
+      </figure>
+      <button type="button" data-next>OUR FAVORITE MEMORY</button>
+    </section>
+    <section class="page" id="page5">
+      <div class="eyebrow">A snapshot of our story</div>
+      <h2>My hand will always find <em>yours.</em></h2>
+      <figure>
+        <img class="photo" src="images/our-story.jpeg" alt="A treasured memory of us holding hands" />
+        <figcaption>One small moment, one very big feeling.</figcaption>
+      </figure>
+      <button type="button" data-next>ONE LAST NOTE</button>
+    </section>
+    <section class="page" id="page6">
+      <div class="little-heart" aria-hidden="true">&hearts;</div>
+      <div class="eyebrow">Always and forever</div>
+      <h2>Happy 2nd Love Anniversary, <em>Aishu.</em></h2>
+      <p>Thank you for being my favorite person, my happiest place, and my most beautiful chapter.</p>
+      <button type="button" id="celebrateButton">CELEBRATE OUR LOVE</button>
+      <p class="final-note" id="finalNote">Two years down, forever to go. I love you, Aishu.</p>
+    </section>
+  </main>
+  <script>
+    let currentPage = 1;
+    document.getElementById('dateForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const input = document.getElementById('anniversaryDate');
+      const error = document.getElementById('dateError');
+      if (input.value.trim() === '05/10/24') {
+        document.getElementById('loginPage').classList.remove('active');
+        document.getElementById('page1').classList.add('active');
+      } else {
+        error.textContent = 'That is not our date. Try again, my love.';
+        input.value = '';
+        input.focus();
+      }
+    });
+    document.querySelectorAll('[data-next]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.getElementById(`page${currentPage}`).classList.remove('active');
+        currentPage += 1;
+        document.getElementById(`page${currentPage}`).classList.add('active');
+      });
+    });
+    function addHeart(extra = false) {
+      const heart = document.createElement('span');
+      heart.className = 'heart';
+      heart.style.left = `${Math.random() * 100}%`;
+      heart.style.setProperty('--duration', `${extra ? 3 + Math.random() * 2 : 6 + Math.random() * 5}s`);
+      heart.style.setProperty('--drift', `${-45 + Math.random() * 90}px`);
+      document.getElementById('heartField').appendChild(heart);
+      heart.addEventListener('animationend', () => heart.remove());
+    }
+    setInterval(() => addHeart(), 650);
+    document.getElementById('celebrateButton').addEventListener('click', () => {
+      document.getElementById('finalNote').classList.add('show');
+      for (let index = 0; index < 18; index += 1) setTimeout(() => addHeart(true), index * 70);
+    });
+  </script>
+</body>
+</html>
